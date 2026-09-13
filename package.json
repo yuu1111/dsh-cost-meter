@@ -1,0 +1,94 @@
+{
+	"name": "dsh-cost-meter",
+	"version": "1.0.0",
+	"description": "DeepSeek Harness Web GUI plugin: real-time spend for the current session, priced from per-model token rates and shown as a pill under the composer",
+	"keywords": [
+		"cordis",
+		"deepseek-harness",
+		"dsh",
+		"dsh-plugin",
+		"cost",
+		"spend",
+		"price",
+		"billing",
+		"token",
+		"web-ui"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "yuu1111"
+	},
+	"type": "module",
+	"main": "lib/index.js",
+	"exports": {
+		".": "./lib/index.js",
+		"./client": "./lib/client.js"
+	},
+	"files": [
+		"lib",
+		"cordis.patch.yml",
+		"README.md",
+		"README.ja.md",
+		"LICENSE"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"packageManager": "bun@1.4.2",
+	"scripts": {
+		"build": "bun build.ts",
+		"prepack": "bun run build",
+		"check": "tsc -p tsconfig.json",
+		"test": "bun run build && bun test",
+		"lint": "biome check .",
+		"format": "biome check --write --unsafe ."
+	},
+	"dsh": {
+		"bundle": {
+			"patch": "./cordis.patch.yml"
+		},
+		"client": {
+			"platform": "web",
+			"inject": [
+				"@deepseek-ai/dsh-client-ui-conversation"
+			]
+		}
+	},
+	"peerDependencies": {
+		"@deepseek-ai/cordis": "^4.0.2",
+		"@deepseek-ai/dsh-client-ui-conversation": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-session-projection": "^0.1.5-rc.2",
+		"@deepseek-ai/schemastery": "^3.18.2",
+		"zod": "^4.6.2"
+	},
+	"peerDependenciesMeta": {
+		"@deepseek-ai/dsh-client-ui-conversation": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@deepseek-ai/cordis": "^4.0.2",
+		"@deepseek-ai/dsh-client-ui-conversation": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-client-ui-primitives": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-client-ui-slots": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-llm": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-session": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-session-projection": "^0.1.5-rc.2",
+		"@deepseek-ai/schemastery": "^3.18.2",
+		"@types/bun": "^1.4.2",
+		"@types/react": "~19.3.0",
+		"react": "^19.3.0",
+		"typescript": "^7.0.2",
+		"zod": "^4.6.2",
+		"@deepseek-ai/dsh-client-ui-session": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-client-ui-renderer": "^0.1.5-rc.2",
+		"@deepseek-ai/dsh-llm-retry": "^0.1.5-rc.2",
+		"react-dom": "^19.3.0",
+		"@types/react-dom": "~19.3.0",
+		"@biomejs/biome": "^2.5.13",
+		"@yuu1111/biome-config": "^2.2.0",
+		"@yuu1111/tsconfig": "^1.0.7",
+		"@yuu1111/knip-config": "^1.0.7",
+		"knip": "^6.35.1"
+	}
+}

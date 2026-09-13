@@ -1,0 +1,32 @@
+# dsh-cost-meter layer.
+#
+# Adds one plugin row. The host half registers the `costMeter` session
+# projection (whole-log spend folded from durable provider usage) and the
+# browser half adds one pill to the composer's stats dock.
+#
+# Configuration (row `config`):
+#   symbol:   display symbol prefixed to every amount. Default '$'.
+#   rates:    per-1M-token unit prices, keyed by "<provider>/<model>" or by
+#             "<model>". The route key wins over the bare model, which wins
+#             over `fallback`. Tokens whose route matches nothing are counted
+#             as unpriced and the pill marks its total with a trailing '+'.
+#   fallback: unit prices for every route no key matches. Omit it to price
+#             nothing by default, which keeps a wrong rate from looking right.
+#
+# Replace the numbers below with the rates your own provider actually bills.
+- insert:
+    - id: cost-meter
+      name: dsh-cost-meter
+      config:
+        symbol: '$'
+        rates:
+          opencode-go/deepseek-flash:
+            input: 0.22
+            output: 0.66
+            cacheRead: 0.007
+            cacheWrite: 0
+          opencode-go/deepseek-v4-pro:
+            input: 0.66
+            output: 1.98
+            cacheRead: 0.022
+            cacheWrite: 0
