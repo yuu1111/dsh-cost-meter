@@ -31,7 +31,8 @@
 - `bun run test` は `lib/` をビルドし直してから Bun のテストを走らせる
 - `npm pack --dry-run --ignore-scripts` は公開されるファイルの組を確かめ、実際の pack や publish では `prepack` が `lib/` をビルドする
 
-CI は未導入なので、コミット前に `bun run check`、`bun run lint`、`bun run test` をローカルで走らせる
+.github/workflows/ci.yml が push と pull request で Linux 上の bun install --frozen-lockfile、bun run build、bun run lint、bun run check、bunx knip、bun test、npm pack --dry-run を回す
+コミット前にはローカルでも同じ並びを走らせる
 
 ## Projection & Pricing Semantics
 
