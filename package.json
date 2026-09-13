@@ -2,6 +2,14 @@
 	"name": "dsh-ui-cost-meter",
 	"version": "1.0.0",
 	"description": "DeepSeek Harness Web GUI plugin: real-time spend for the current session, priced from per-model token rates and shown as a pill under the composer",
+	"homepage": "https://github.com/yuu1111/dsh-ui-cost-meter#readme",
+	"bugs": {
+		"url": "https://github.com/yuu1111/dsh-ui-cost-meter/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/yuu1111/dsh-ui-cost-meter.git"
+	},
 	"keywords": [
 		"cordis",
 		"deepseek-harness",
@@ -15,6 +23,10 @@
 		"web-ui"
 	],
 	"license": "MIT",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	},
 	"author": {
 		"name": "yuu1111"
 	},
