@@ -13,10 +13,13 @@ import { readFile, rm, writeFile } from "node:fs/promises";
 /**
  * 配信側がモジュール名として使う値 パッケージ名と一致させる
  */
-const manifest = (await Bun.file(
-	new URL("./package.json", import.meta.url),
-).json()) as { name: string };
-const MODULE_ID = manifest.name;
+/**
+ * 配信側がモジュール名として使う値
+ *
+ * client modules は最も近い package.json の name をモジュール名にするため
+ * この値は package.json の name と一致させる 試験が一致を見ている
+ */
+const MODULE_ID = "dsh-cost-meter";
 
 /**
  * 出力先 DSH のプラグイン慣例に合わせる
