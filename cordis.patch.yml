@@ -1,4 +1,4 @@
-# dsh-cost-meter layer.
+# dsh-ui-cost-meter layer.
 #
 # Adds one plugin row. The host half registers the `costMeter` session
 # projection (whole-log spend folded from durable provider usage) and the
@@ -23,7 +23,7 @@
 # rather than billing per token. Replace them with the rates you actually pay.
 - insert:
     - id: cost-meter
-      name: dsh-cost-meter
+      name: dsh-ui-cost-meter
       config:
         symbol: '$'
         rates:

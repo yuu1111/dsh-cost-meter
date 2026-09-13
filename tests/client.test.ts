@@ -152,7 +152,7 @@ const view: CostMeterView = {
 describe("client bundle", () => {
 	test("ローダー形式でプラグイン面を公開する", () => {
 		const loaded = loadBundle();
-		expect(loaded.id).toBe("dsh-cost-meter");
+		expect(loaded.id).toBe("dsh-ui-cost-meter");
 		expect(loaded.exports.inject).toEqual(["slots"]);
 		expect(typeof loaded.exports.apply).toBe("function");
 	});
@@ -180,10 +180,10 @@ describe("client bundle", () => {
 			}),
 		);
 		// シェルの統計ピルと同じく 押すと開く引き金として描く
-		expect(markup).toContain("dsh-cost-meter-pill");
+		expect(markup).toContain("dsh-ui-cost-meter-pill");
 		expect(markup).toContain('aria-haspopup="dialog"');
 		expect(markup).toContain(">0.421<");
-		expect(markup).not.toContain("dsh-cost-meter-unpriced");
+		expect(markup).not.toContain("dsh-ui-cost-meter-unpriced");
 	});
 
 	test("課金が無ければ何も描かない", () => {
@@ -199,7 +199,7 @@ describe("client bundle", () => {
 			}),
 		);
 		// 席の目印だけを残し ピルは描かない
-		expect(markup).not.toContain("dsh-cost-meter-pill");
+		expect(markup).not.toContain("dsh-ui-cost-meter-pill");
 	});
 
 	test("未設定トークンがあれば印を付ける", () => {
@@ -215,7 +215,7 @@ describe("client bundle", () => {
 					viewSchema.parse({ ...view, unpricedTokens: 1_200 }),
 			}),
 		);
-		expect(markup).toContain("dsh-cost-meter-unpriced");
+		expect(markup).toContain("dsh-ui-cost-meter-unpriced");
 	});
 });
 

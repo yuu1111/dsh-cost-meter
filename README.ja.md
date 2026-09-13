@@ -1,4 +1,4 @@
-# dsh-cost-meter
+# dsh-ui-cost-meter
 
 [English](README.md) | 日本語
 
@@ -17,7 +17,7 @@ provider usage だけから行います ピルはシェルの統計ピルと同�
 ## 導入
 
 ```sh
-dsh plugin --profile web add dsh-cost-meter
+dsh plugin --profile web add dsh-ui-cost-meter
 ```
 
 ソースから使う場合は `add link:<path>` でも同じです プラグインが自分の bundle patch を
@@ -33,7 +33,7 @@ OpenCode Go 側の id は `deepseek-v4.1-flash`）と DeepSeek V4 Pro を DeepSe
 
 ```yaml
 - id: cost-meter
-  name: dsh-cost-meter
+  name: dsh-ui-cost-meter
   config:
     symbol: '$'
     rates:

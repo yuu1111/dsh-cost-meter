@@ -87,29 +87,29 @@ const MEASURE_STYLE: CSSProperties = {
  * 組み方も同じ値で自前に行を描く
  */
 const STYLE = `
-.dsh-cost-meter{max-width:var(--dsh-chat-content-width);box-sizing:border-box;width:100%;padding:4px calc(var(--dsh-composer-side-clearance) + 16px) 0px;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));justify-content:center;gap:12px;margin:0 auto;display:flex}
-.dsh-cost-meter-anchor{min-width:0;display:inline-flex}
-.dsh-cost-meter-pill{box-sizing:border-box;max-width:100%;color:var(--dsw-alias-label-tertiary);font:inherit;font-variant-numeric:tabular-nums;line-height:inherit;white-space:nowrap;background:0 0;border:none;border-radius:24px;align-items:center;gap:6px;padding:1px 8px;display:inline-flex}
-.dsh-cost-meter-symbol{flex:none;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
-button.dsh-cost-meter-pill{cursor:pointer}
-button.dsh-cost-meter-pill:hover,button.dsh-cost-meter-pill[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}
-.dsh-cost-meter-label{text-overflow:ellipsis;min-width:0;overflow:hidden}
-.dsh-cost-meter-unpriced{margin-left:1px;font-size:11px}
-.dsh-cost-meter-panel{z-index:1100;box-sizing:border-box;background:var(--dsw-specific-menu);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);width:max-content;min-width:min(300px,100vw - 24px);max-width:min(440px,100vw - 24px);box-shadow:var(--dsw-elevation-prominent);color:var(--dsw-alias-label-secondary);cursor:default;border:0;border-radius:12px;padding:16px;font-size:12px;line-height:18px;position:fixed}
-.dsh-cost-meter-title{color:var(--dsw-alias-label-primary);justify-content:space-between;gap:16px;margin-bottom:8px;font-weight:500;display:flex}
-.dsh-cost-meter-titleRule{border-top:.5px solid var(--dsw-alias-border-l2);margin-bottom:10px}
-.dsh-cost-meter-titleValue{font-variant-numeric:tabular-nums}
-.dsh-cost-meter-titleLabel{align-items:center;gap:6px;min-width:0;display:inline-flex}
-.dsh-cost-meter-details{color:var(--dsw-alias-label-tertiary);grid-template-columns:minmax(76px,auto) minmax(0,1fr);gap:6px 16px;margin:0;display:grid}
-.dsh-cost-meter-details dt,.dsh-cost-meter-details dd{min-width:0;margin:0}
-.dsh-cost-meter-details dd{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;text-align:right}
-.dsh-cost-meter-route{overflow-wrap:anywhere}
+.dsh-ui-cost-meter{max-width:var(--dsh-chat-content-width);box-sizing:border-box;width:100%;padding:4px calc(var(--dsh-composer-side-clearance) + 16px) 0px;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));justify-content:center;gap:12px;margin:0 auto;display:flex}
+.dsh-ui-cost-meter-anchor{min-width:0;display:inline-flex}
+.dsh-ui-cost-meter-pill{box-sizing:border-box;max-width:100%;color:var(--dsw-alias-label-tertiary);font:inherit;font-variant-numeric:tabular-nums;line-height:inherit;white-space:nowrap;background:0 0;border:none;border-radius:24px;align-items:center;gap:6px;padding:1px 8px;display:inline-flex}
+.dsh-ui-cost-meter-symbol{flex:none;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+button.dsh-ui-cost-meter-pill{cursor:pointer}
+button.dsh-ui-cost-meter-pill:hover,button.dsh-ui-cost-meter-pill[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}
+.dsh-ui-cost-meter-label{text-overflow:ellipsis;min-width:0;overflow:hidden}
+.dsh-ui-cost-meter-unpriced{margin-left:1px;font-size:11px}
+.dsh-ui-cost-meter-panel{z-index:1100;box-sizing:border-box;background:var(--dsw-specific-menu);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);width:max-content;min-width:min(300px,100vw - 24px);max-width:min(440px,100vw - 24px);box-shadow:var(--dsw-elevation-prominent);color:var(--dsw-alias-label-secondary);cursor:default;border:0;border-radius:12px;padding:16px;font-size:12px;line-height:18px;position:fixed}
+.dsh-ui-cost-meter-title{color:var(--dsw-alias-label-primary);justify-content:space-between;gap:16px;margin-bottom:8px;font-weight:500;display:flex}
+.dsh-ui-cost-meter-titleRule{border-top:.5px solid var(--dsw-alias-border-l2);margin-bottom:10px}
+.dsh-ui-cost-meter-titleValue{font-variant-numeric:tabular-nums}
+.dsh-ui-cost-meter-titleLabel{align-items:center;gap:6px;min-width:0;display:inline-flex}
+.dsh-ui-cost-meter-details{color:var(--dsw-alias-label-tertiary);grid-template-columns:minmax(76px,auto) minmax(0,1fr);gap:6px 16px;margin:0;display:grid}
+.dsh-ui-cost-meter-details dt,.dsh-ui-cost-meter-details dd{min-width:0;margin:0}
+.dsh-ui-cost-meter-details dd{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;text-align:right}
+.dsh-ui-cost-meter-route{overflow-wrap:anywhere}
 `;
 
 /**
  * スタイルタグの識別子
  */
-const STYLE_TAG_ID = "dsh-cost-meter/style.css";
+const STYLE_TAG_ID = "dsh-ui-cost-meter/style.css";
 
 /**
  * ピルが受け取る props
@@ -201,10 +201,10 @@ function CostPillBody({ view }: { view: CostMeterView }) {
 	const { open, setOpen, rootRef, panelRef, pos } = useCostDialog();
 	const amount = `${view.symbol}${formatAmount(view.total)}`;
 	return (
-		<span ref={rootRef} className="dsh-cost-meter-anchor">
+		<span ref={rootRef} className="dsh-ui-cost-meter-anchor">
 			<button
 				type="button"
-				className="dsh-cost-meter-pill"
+				className="dsh-ui-cost-meter-pill"
 				aria-haspopup="dialog"
 				aria-expanded={open}
 				aria-label={`${PANEL_TITLE} ${amount}${view.unpricedTokens > 0 ? "+" : ""}`}
@@ -212,12 +212,14 @@ function CostPillBody({ view }: { view: CostMeterView }) {
 					setOpen(!open);
 				}}
 			>
-				<span className="dsh-cost-meter-symbol" aria-hidden>
+				<span className="dsh-ui-cost-meter-symbol" aria-hidden>
 					{view.symbol}
 				</span>
-				<span className="dsh-cost-meter-label">{formatAmount(view.total)}</span>
+				<span className="dsh-ui-cost-meter-label">
+					{formatAmount(view.total)}
+				</span>
 				{view.unpricedTokens > 0 && (
-					<span className="dsh-cost-meter-unpriced" aria-hidden>
+					<span className="dsh-ui-cost-meter-unpriced" aria-hidden>
 						+
 					</span>
 				)}
@@ -226,28 +228,28 @@ function CostPillBody({ view }: { view: CostMeterView }) {
 				createPortal(
 					<div
 						ref={panelRef}
-						className="dsh-cost-meter-panel"
+						className="dsh-ui-cost-meter-panel"
 						role="dialog"
 						aria-label={PANEL_TITLE}
 						style={pos ?? MEASURE_STYLE}
 					>
-						<div className="dsh-cost-meter-title">
-							<span className="dsh-cost-meter-titleLabel">
-								<span className="dsh-cost-meter-symbol" aria-hidden>
+						<div className="dsh-ui-cost-meter-title">
+							<span className="dsh-ui-cost-meter-titleLabel">
+								<span className="dsh-ui-cost-meter-symbol" aria-hidden>
 									{view.symbol}
 								</span>
 								{PANEL_TITLE}
 							</span>
-							<span className="dsh-cost-meter-titleValue">{amount}</span>
+							<span className="dsh-ui-cost-meter-titleValue">{amount}</span>
 						</div>
-						<div className="dsh-cost-meter-titleRule" aria-hidden />
-						<dl className="dsh-cost-meter-details" data-cost-meter-details>
+						<div className="dsh-ui-cost-meter-titleRule" aria-hidden />
+						<dl className="dsh-ui-cost-meter-details" data-cost-meter-details>
 							{breakdownRows(view).map((row) => (
 								<Fragment key={row.label}>
 									<dt>{row.label}</dt>
 									<dd
 										className={
-											row.route === true ? "dsh-cost-meter-route" : undefined
+											row.route === true ? "dsh-ui-cost-meter-route" : undefined
 										}
 									>
 										{row.value}
@@ -281,7 +283,7 @@ function CostPill({ useProjection }: CostPillProps) {
 			<span ref={anchorRef} hidden />
 			{body !== null &&
 				(row === null ? (
-					<div className="dsh-cost-meter">{body}</div>
+					<div className="dsh-ui-cost-meter">{body}</div>
 				) : (
 					createPortal(body, row)
 				))}

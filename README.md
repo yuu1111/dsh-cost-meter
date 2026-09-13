@@ -1,4 +1,4 @@
-# dsh-cost-meter
+# dsh-ui-cost-meter
 
 English | [日本語](README.ja.md)
 
@@ -20,7 +20,7 @@ unpriced tokens, and the route that priced them.
 ## Install
 
 ```sh
-dsh plugin --profile web add dsh-cost-meter
+dsh plugin --profile web add dsh-ui-cost-meter
 ```
 
 Under a source checkout, `add link:<path>` works the same way. The plugin
@@ -37,7 +37,7 @@ API and OpenCode Go both charge. Replace them with the rates you actually pay.
 
 ```yaml
 - id: cost-meter
-  name: dsh-cost-meter
+  name: dsh-ui-cost-meter
   config:
     symbol: '$'
     rates:

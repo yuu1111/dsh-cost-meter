@@ -1,5 +1,5 @@
 {
-	"name": "dsh-cost-meter",
+	"name": "dsh-ui-cost-meter",
 	"version": "1.0.0",
 	"description": "DeepSeek Harness Web GUI plugin: real-time spend for the current session, priced from per-model token rates and shown as a pill under the composer",
 	"keywords": [

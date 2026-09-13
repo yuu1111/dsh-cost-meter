@@ -19,7 +19,7 @@ import { readFile, rm, writeFile } from "node:fs/promises";
  * client modules は最も近い package.json の name をモジュール名にするため
  * この値は package.json の name と一致させる 試験が一致を見ている
  */
-const MODULE_ID = "dsh-cost-meter";
+const MODULE_ID = "dsh-ui-cost-meter";
 
 /**
  * 出力先 DSH のプラグイン慣例に合わせる
