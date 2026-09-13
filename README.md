@@ -12,8 +12,10 @@ far.
 
 The amount rides the session projection seam, so it is whole-log (paging and
 compaction cannot change it), it survives reloads, and it is priced from the
-durable provider usage the harness already logs. Hovering the pill shows the
-breakdown: input, output, cache, total, and the route that priced them.
+durable provider usage the harness already logs. The pill is shaped like the
+shipped stats pills: clicking it opens a breakdown panel that repeats their
+dialog's title, rule, and label/value rows, naming each cache bucket, the
+unpriced tokens, and the route that priced them.
 
 ## Install
 
@@ -28,8 +30,10 @@ editing `cordis.patch.yml`.
 ## Configure
 
 Every field lives on the plugin row, and every price is per **one million
-tokens** in whatever currency `symbol` names. Replace the numbers with the
-rates your own provider actually bills.
+tokens** in whatever currency `symbol` names. The example below prices DeepSeek
+V4.1 Flash (`deepseek-flash`; OpenCode Go's own id is `deepseek-v4.1-flash`)
+and DeepSeek V4 Pro at DeepSeek's published off-peak rates, which the official
+API and OpenCode Go both charge. Replace them with the rates you actually pay.
 
 ```yaml
 - id: cost-meter
@@ -38,16 +42,37 @@ rates your own provider actually bills.
     symbol: '$'
     rates:
       opencode-go/deepseek-flash:
-        input: 0.22
-        output: 0.66
-        cacheRead: 0.007
+        input: 0.15
+        output: 0.6
+        cacheRead: 0.003
         cacheWrite: 0
       opencode-go/deepseek-v4-pro:
         input: 0.66
         output: 1.98
         cacheRead: 0.022
         cacheWrite: 0
+      deepseek-official/deepseek-flash:
+        input: 0.15
+        output: 0.6
+        cacheRead: 0.003
+        cacheWrite: 0
+      deepseek-official/deepseek-v4-pro:
+        input: 0.66
+        output: 1.98
+        cacheRead: 0.022
+        cacheWrite: 0
 ```
+
+One rate per route can only carry the off-peak number, so that is what the
+example shows: peak is exactly double in every field and covers 01:00-04:00 and
+06:00-10:00 UTC, Monday through Friday. DeepSeek bills no cache writes, so
+`cacheWrite` stays `0`, and the retired `deepseek-v4-flash` and
+`deepseek-v4-flash-vision-exp` ids now route to V4.1 Flash at the Flash price.
+OpenCode Go is a $10/month plan, so its rates meter usage against the plan's
+limits rather than pricing a per-token invoice.
+
+Sources: [DeepSeek Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing),
+[OpenCode Go](https://opencode.ai/docs/go/).
 
 | Field | Meaning |
 |---|---|
@@ -57,8 +82,8 @@ rates your own provider actually bills.
 
 A route with no matching rate is not guessed at: its tokens are counted as
 **unpriced**, contribute nothing to the total, and make the pill mark its amount
-with a trailing `+`. The tooltip then names how many tokens were left unpriced,
-so a missing rate is visible instead of silently wrong.
+with a trailing `+`. The panel then names how many tokens were left unpriced, so
+a missing rate is visible instead of silently wrong.
 
 ## Where the numbers come from
 
@@ -77,6 +102,11 @@ portal, so the cost pill shares that row's font, spacing, and vertical rhythm
 instead of starting a row of its own. Without a stats row to join (a session
 that has produced no steps or tokens yet) it falls back to drawing its own
 centered row.
+
+The pill and its panel carry the shell's own declarations — the same `--dsw-*`
+tokens, sizes, radius, and two-column row grid as the shipped pills and their
+dialog — because a third-party bundle can only reach the platform modules the
+shell seeds, not its CSS modules.
 
 ## Caveats
 

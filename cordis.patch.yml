@@ -13,7 +13,14 @@
 #   fallback: unit prices for every route no key matches. Omit it to price
 #             nothing by default, which keeps a wrong rate from looking right.
 #
-# Replace the numbers below with the rates your own provider actually bills.
+# The values below are DeepSeek's published off-peak rates in USD per 1M
+# tokens, which the official API and OpenCode Go both charge. Off-peak is half
+# of peak, and peak runs 01:00-04:00 and 06:00-10:00 UTC, Monday through Friday.
+# Checked 2026-09-14 against:
+#   https://api-docs.deepseek.com/quick_start/pricing
+#   https://opencode.ai/docs/go/
+# OpenCode Go is a $10/month plan that meters these rates against usage limits
+# rather than billing per token. Replace them with the rates you actually pay.
 - insert:
     - id: cost-meter
       name: dsh-cost-meter
@@ -21,11 +28,21 @@
         symbol: '$'
         rates:
           opencode-go/deepseek-flash:
-            input: 0.22
-            output: 0.66
-            cacheRead: 0.007
+            input: 0.15
+            output: 0.6
+            cacheRead: 0.003
             cacheWrite: 0
           opencode-go/deepseek-v4-pro:
+            input: 0.66
+            output: 1.98
+            cacheRead: 0.022
+            cacheWrite: 0
+          deepseek-official/deepseek-flash:
+            input: 0.15
+            output: 0.6
+            cacheRead: 0.003
+            cacheWrite: 0
+          deepseek-official/deepseek-v4-pro:
             input: 0.66
             output: 1.98
             cacheRead: 0.022

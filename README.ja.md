@@ -11,8 +11,8 @@ DeepSeek Harness の Web GUI に いまのセッションがいくら使った�
 
 金額はセッション投影の上に載っているため ログ全体の集計になり ページングや圧縮で
 変わりません 再読み込みでも消えず 値付けはハーネスがすでに耐久ログへ記録している
-provider usage だけから行います ピルへカーソルを置くと内訳（入力・出力・キャッシュ・
-合計と 値付けに使った route）が出ます
+provider usage だけから行います ピルはシェルの統計ピルと同じ形で 押すと内訳の
+パネルが開きます（入力・出力・キャッシュ・合計と 値付けに使った route）
 
 ## 導入
 
@@ -26,8 +26,10 @@ dsh plugin --profile web add dsh-cost-meter
 ## 設定
 
 設定はすべてプラグインの行に置きます 単価はすべて **100万トークンあたり** で 通貨は
-`symbol` が示すものに揃えてください 下の数字はご自身の provider の請求に合わせて
-書き換えてください
+`symbol` が示すものに揃えてください 下の例は DeepSeek V4.1 Flash（`deepseek-flash`
+OpenCode Go 側の id は `deepseek-v4.1-flash`）と DeepSeek V4 Pro を DeepSeek の
+公示単価（オフピーク）で値付けします 公式 API と OpenCode Go は同じ数字を請求します
+実際に払う額に合わせて書き換えてください
 
 ```yaml
 - id: cost-meter
@@ -36,11 +38,36 @@ dsh plugin --profile web add dsh-cost-meter
     symbol: '$'
     rates:
       opencode-go/deepseek-flash:
-        input: 0.22
-        output: 0.66
-        cacheRead: 0.007
+        input: 0.15
+        output: 0.6
+        cacheRead: 0.003
+        cacheWrite: 0
+      opencode-go/deepseek-v4-pro:
+        input: 0.66
+        output: 1.98
+        cacheRead: 0.022
+        cacheWrite: 0
+      deepseek-official/deepseek-flash:
+        input: 0.15
+        output: 0.6
+        cacheRead: 0.003
+        cacheWrite: 0
+      deepseek-official/deepseek-v4-pro:
+        input: 0.66
+        output: 1.98
+        cacheRead: 0.022
         cacheWrite: 0
 ```
+
+route ごとに1つしか置けないためここではオフピークを示します ピークはどの欄もちょうど
+倍で 月曜から金曜の 01:00-04:00 UTC と 06:00-10:00 UTC にあたります DeepSeek は
+キャッシュ書きを課金しないため `cacheWrite` は `0` のままです 廃止された
+`deepseek-v4-flash` と `deepseek-v4-flash-vision-exp` の id は現在 V4.1 Flash へ
+回され Flash の単価で課金されます OpenCode Go は月10ドルの定額プランで この単価は
+トークンの請求額ではなく プランの使用上限に対する計量に使われます
+
+出典: [DeepSeek Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing)
+[OpenCode Go](https://opencode.ai/docs/go/)
 
 | フィールド | 意味 |
 |---|---|
@@ -49,7 +76,7 @@ dsh plugin --profile web add dsh-cost-meter
 | `fallback` | どのキーにも一致しない route の単価 省略すると既定では値付けしない |
 
 単価の無い route は推測せず **未設定** として数えます 合計には入らず ピルの金額に
-末尾の `+` が付きます ツールチップには未設定のトークン数が出るため 単価の抜けが
+末尾の `+` が付きます 内訳のパネルには未設定のトークン数が出るため 単価の抜けが
 黙って間違った金額になることはありません
 
 ## 数字の出どころ
@@ -65,6 +92,10 @@ dsh plugin --profile web add dsh-cost-meter
 シェルの統計ピルの行（`[data-composer-stats]`）へ差し込みます そのため字・間隔・
 高さがその行のまま揃い 別の行を始めません 行がまだ無いセッション（ステップも
 トークンも無い状態）では自前の行として中央に描きます
+
+ピルとそのパネルはシェル側の宣言（`--dsw-*` のトークン・寸法・角丸・2列の行の
+組み方）をそのまま持ちます 外部のバンドルはシェルが配るプラットフォームモジュール
+だけを読め その CSS Modules には届かないためです
 
 ## 注意
 
