@@ -97,16 +97,6 @@ declare module "@deepseek-ai/dsh-session-projection/types" {
 }
 
 /**
- * すべてのバケットが0の値
- */
-export const ZERO_BUCKETS: Buckets = {
-	uncachedInput: 0,
-	output: 0,
-	cacheRead: 0,
-	cacheWrite: 0,
-};
-
-/**
  * すべての内訳が0の値
  */
 export const ZERO_PARTS: CostParts = {
@@ -128,6 +118,21 @@ function readCount(value: unknown): number | undefined {
 }
 
 /**
+ * オブジェクトから名前で1つの値を読む
+ *
+ * 総称的な辞書として断定せず 名前を照合して取り出す
+ * @param value - 読む元の値
+ * @param key - 読む名前
+ * @returns 入っていればその値 無ければ undefined
+ */
+function readField(value: object, key: string): unknown {
+	for (const [name, field] of Object.entries(value)) {
+		if (name === key) return field;
+	}
+	return undefined;
+}
+
+/**
  * 耐久イベントの usage をバケットへ写す
  *
  * 入力と出力が揃っているときだけ成立する キャッシュの2つは未報告を0として扱う
@@ -136,15 +141,14 @@ function readCount(value: unknown): number | undefined {
  */
 export function bucketsFromUsage(usage: unknown): Buckets | undefined {
 	if (typeof usage !== "object" || usage === null) return undefined;
-	const record = usage as Record<string, unknown>;
-	const uncachedInput = readCount(record.inputTokens);
-	const output = readCount(record.outputTokens);
+	const uncachedInput = readCount(readField(usage, "inputTokens"));
+	const output = readCount(readField(usage, "outputTokens"));
 	if (uncachedInput === undefined || output === undefined) return undefined;
 	return {
 		uncachedInput,
 		output,
-		cacheRead: readCount(record.cacheReadTokens) ?? 0,
-		cacheWrite: readCount(record.cacheWriteTokens) ?? 0,
+		cacheRead: readCount(readField(usage, "cacheReadTokens")) ?? 0,
+		cacheWrite: readCount(readField(usage, "cacheWriteTokens")) ?? 0,
 	};
 }
 
@@ -276,18 +280,28 @@ export function totalOf(parts: CostParts): number {
 }
 
 /**
- * 金額を表示用の桁へ丸める
+ * 金額を出す小数点以下の桁を選ぶ
  *
  * 桁は金額の大きさで決める 1を超えるものは銭まで 1未満は意味のある桁が残るまで
- * 細かく見る 0は必ず小数第2位まで出す
+ * 細かく見る
+ * @param value - 桁を決める金額
+ * @returns 小数点以下の桁数
+ */
+export function amountDecimals(value: number): number {
+	const safe = Number.isFinite(value) && value > 0 ? value : 0;
+	if (safe >= 1) return 2;
+	if (safe >= 0.01) return 3;
+	return 4;
+}
+
+/**
+ * 金額を表示用の桁へ丸める
  * @param value - 表示する金額
  * @returns 丸めた数字だけの文字列
  */
 export function formatAmount(value: number): string {
 	const safe = Number.isFinite(value) && value > 0 ? value : 0;
-	if (safe >= 1) return safe.toFixed(2);
-	if (safe >= 0.01) return safe.toFixed(3);
-	return safe.toFixed(4);
+	return safe.toFixed(amountDecimals(safe));
 }
 
 /**
@@ -313,25 +327,45 @@ function trimZero(value: number): string {
 }
 
 /**
- * ピルに付ける内訳の説明を作る
- * @param view - 今の金額
- * @returns 1行の説明
+ * 内訳パネルに並べる1行
  */
-export function breakdownText(view: CostMeterView): string {
-	const parts = [
-		`in ${view.symbol}${formatAmount(view.input)}`,
-		`out ${view.symbol}${formatAmount(view.output)}`,
+export interface BreakdownRow {
+	/** 左に出す見出し */
+	readonly label: string;
+	/** 右に出す値 */
+	readonly value: string;
+	/** route 名のように長く 折り返してよい値かどうか */
+	readonly route?: boolean;
+}
+
+/**
+ * 内訳パネルに並べる行を作る
+ *
+ * 見出しはシェルのトークン内訳と同じ語を使い 値は金額にする 列に並ぶため桁は
+ * 合計の桁へ揃える 0のキャッシュ書きはシェルと同じく省き 未設定トークンと
+ * route は分かるときだけ足す
+ * @param view - 今の金額
+ * @returns 上から並べる行
+ */
+export function breakdownRows(view: CostMeterView): BreakdownRow[] {
+	const decimals = amountDecimals(view.total);
+	const money = (value: number): string =>
+		`${view.symbol}${(Number.isFinite(value) && value > 0 ? value : 0).toFixed(decimals)}`;
+	const rows: BreakdownRow[] = [
+		{ label: "Uncached input", value: money(view.input) },
+		{ label: "Cached input", value: money(view.cacheRead) },
 	];
-	if (view.cacheRead > 0 || view.cacheWrite > 0) {
-		parts.push(
-			`cache ${view.symbol}${formatAmount(view.cacheRead + view.cacheWrite)}`,
-		);
-	}
-	parts.push(`total ${view.symbol}${formatAmount(view.total)}`);
+	if (view.cacheWrite > 0)
+		rows.push({ label: "Cache write", value: money(view.cacheWrite) });
+	rows.push({ label: "Output", value: money(view.output) });
+	if (view.unpricedTokens > 0)
+		rows.push({
+			label: "Unpriced",
+			value: `${formatTokens(view.unpricedTokens)} tok`,
+		});
 	const route =
 		view.provider === null ? view.model : `${view.provider}/${view.model}`;
-	if (route !== null) parts.push(route);
-	if (view.unpricedTokens > 0)
-		parts.push(`${formatTokens(view.unpricedTokens)} tok unpriced`);
-	return parts.join(" · ");
+	if (route !== null)
+		rows.push({ label: "Provider / model", value: route, route: true });
+	return rows;
 }

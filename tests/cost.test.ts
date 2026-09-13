@@ -5,15 +5,15 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { type CostMeterState, costMeterProjection } from "../src/index.ts";
+import { type CostMeterState, costMeterProjection } from "../src/index";
 import {
-	breakdownText,
+	breakdownRows,
 	type CostMeterView,
 	type CostSettings,
 	formatAmount,
 	formatTokens,
 	resolveRates,
-} from "../src/shared.ts";
+} from "../src/shared";
 
 const settings: CostSettings = {
 	symbol: "$",
@@ -150,7 +150,7 @@ describe("formatting", () => {
 		expect(formatTokens(7_300_000)).toBe("7.3M");
 	});
 
-	test("内訳の説明は未設定トークンを明示する", () => {
+	test("内訳の行は未設定トークンと route を明示する", () => {
 		const view: CostMeterView = {
 			symbol: "$",
 			total: 0.42,
@@ -163,8 +163,16 @@ describe("formatting", () => {
 			provider: "opencode-go",
 			model: "deepseek-flash",
 		};
-		expect(breakdownText(view)).toBe(
-			"in $0.100 · out $0.320 · total $0.420 · opencode-go/deepseek-flash · 1.2k tok unpriced",
-		);
+		expect(breakdownRows(view)).toEqual([
+			{ label: "Uncached input", value: "$0.100" },
+			{ label: "Cached input", value: "$0.000" },
+			{ label: "Output", value: "$0.320" },
+			{ label: "Unpriced", value: "1.2k tok" },
+			{
+				label: "Provider / model",
+				value: "opencode-go/deepseek-flash",
+				route: true,
+			},
+		]);
 	});
 });

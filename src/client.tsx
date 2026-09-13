@@ -1,19 +1,34 @@
 /**
  * ブラウザ側の本体
  *
- * シェルの統計ピルと同じ行へ 1つのピルを足す 金額はホスト側のセッション投影
- * `costMeter` が持つ値だけで 単価はここでは扱わない
+ * シェルの統計ピルと同じ行へピルを1つ足す 金額はホスト側のセッション投影
+ * `costMeter` が持つ値だけで 単価はここでは扱わない 見た目と操作もシェルの
+ * 統計ピルに合わせ 押すと内訳のパネルが開く
  */
 
 import type { Context } from "@deepseek-ai/cordis";
 import type {} from "@deepseek-ai/dsh-client-ui-conversation/client";
-import { Tooltip } from "@deepseek-ai/dsh-client-ui-primitives";
+import {
+	useAnchoredPosition,
+	useDismissOnOutsidePointer,
+} from "@deepseek-ai/dsh-client-ui-primitives";
 import type {} from "@deepseek-ai/dsh-client-ui-renderer/client";
 import type {} from "@deepseek-ai/dsh-client-ui-session/client";
 import type { PropsRuntime } from "@deepseek-ai/dsh-client-ui-slots";
-import { useEffect, useRef, useState } from "react";
+import {
+	type CSSProperties,
+	Fragment,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { createPortal } from "react-dom";
-import { breakdownText, formatAmount, PROJECTION_KEY } from "./shared.ts";
+import {
+	breakdownRows,
+	type CostMeterView,
+	formatAmount,
+	PROJECTION_KEY,
+} from "./shared";
 
 /**
  * ピルを置くドック
@@ -35,19 +50,60 @@ const STATS_ROW_SELECTOR = "[data-composer-stats]";
 const PILL_ID = "cost";
 
 /**
- * ピルの見た目
+ * 内訳パネルの見出し
  *
- * 統計ピルの行へ入るときは行の字と間隔をそのまま使う 行が無いときだけ自前の
- * 行を描くため その行の組み方も同じ値で持つ シェルの CSS Modules は外から
- * 読めないので自前の style タグで配る
+ * シェルの統計ピルは i18n の席を通るが このプラグインは席を持たない
+ */
+const PANEL_TITLE = "Cost";
+
+/**
+ * パネルと引き金の間隔
+ *
+ * シェルの統計ピルのダイアログと同じ値に揃える
+ */
+const PANEL_GAP = 8;
+
+/**
+ * パネルと画面端の間隔
+ */
+const PANEL_MARGIN = 12;
+
+/**
+ * 位置が決まる前のパネル
+ *
+ * 見えないまま寸法だけ測らせ 計測が終わると座標へ差し替わる
+ */
+const MEASURE_STYLE: CSSProperties = {
+	visibility: "hidden",
+	left: 0,
+	top: 0,
+};
+
+/**
+ * ピルとパネルの見た目
+ *
+ * シェルの統計ピルと内訳ダイアログの CSS Modules は外から読めないため 同じ
+ * トークンと同じ宣言を自前の class で持つ 統計ピルの行が無いときだけ 行の
+ * 組み方も同じ値で自前に行を描く
  */
 const STYLE = `
-.dsh-cost-meter{display:flex;justify-content:center;gap:12px;max-width:var(--dsh-chat-content-width);width:100%;margin:0 auto;box-sizing:border-box;padding:0 calc(var(--dsh-composer-side-clearance) + 16px);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}
-.dsh-cost-meter-pill{display:inline-flex;align-items:center;gap:5px;box-sizing:border-box;max-width:100%;padding:1px 8px;border-radius:24px;color:var(--dsw-alias-label-tertiary);font:inherit;font-variant-numeric:tabular-nums;line-height:inherit;white-space:nowrap}
-.dsh-cost-meter-pill:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}
-.dsh-cost-meter-symbol{flex:none;font-size:12px;font-weight:600;line-height:1}
-.dsh-cost-meter-amount{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.dsh-cost-meter{max-width:var(--dsh-chat-content-width);box-sizing:border-box;width:100%;padding:4px calc(var(--dsh-composer-side-clearance) + 16px) 0px;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));justify-content:center;gap:12px;margin:0 auto;display:flex}
+.dsh-cost-meter-anchor{min-width:0;display:inline-flex}
+.dsh-cost-meter-pill{box-sizing:border-box;max-width:100%;color:var(--dsw-alias-label-tertiary);font:inherit;font-variant-numeric:tabular-nums;line-height:inherit;white-space:nowrap;background:0 0;border:none;border-radius:24px;align-items:center;gap:6px;padding:1px 8px;display:inline-flex}
+.dsh-cost-meter-symbol{flex:none;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+button.dsh-cost-meter-pill{cursor:pointer}
+button.dsh-cost-meter-pill:hover,button.dsh-cost-meter-pill[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}
+.dsh-cost-meter-label{text-overflow:ellipsis;min-width:0;overflow:hidden}
 .dsh-cost-meter-unpriced{margin-left:1px;font-size:11px}
+.dsh-cost-meter-panel{z-index:1100;box-sizing:border-box;background:var(--dsw-specific-menu);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);width:max-content;min-width:min(300px,100vw - 24px);max-width:min(440px,100vw - 24px);box-shadow:var(--dsw-elevation-prominent);color:var(--dsw-alias-label-secondary);cursor:default;border:0;border-radius:12px;padding:16px;font-size:12px;line-height:18px;position:fixed}
+.dsh-cost-meter-title{color:var(--dsw-alias-label-primary);justify-content:space-between;gap:16px;margin-bottom:8px;font-weight:500;display:flex}
+.dsh-cost-meter-titleRule{border-top:.5px solid var(--dsw-alias-border-l2);margin-bottom:10px}
+.dsh-cost-meter-titleValue{font-variant-numeric:tabular-nums}
+.dsh-cost-meter-titleLabel{align-items:center;gap:6px;min-width:0;display:inline-flex}
+.dsh-cost-meter-details{color:var(--dsw-alias-label-tertiary);grid-template-columns:minmax(76px,auto) minmax(0,1fr);gap:6px 16px;margin:0;display:grid}
+.dsh-cost-meter-details dt,.dsh-cost-meter-details dd{min-width:0;margin:0}
+.dsh-cost-meter-details dd{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;text-align:right}
+.dsh-cost-meter-route{overflow-wrap:anywhere}
 `;
 
 /**
@@ -102,31 +158,107 @@ function useStatsRow(): {
 }
 
 /**
- * 金額そのものを出すピル
- * @param props - 表示する金額
- * @returns ピル
+ * 内訳パネルの開閉と位置
+ *
+ * シェルの統計ピルと同じく引き金の上へ出し 外側への押下と Escape で閉じる
+ * @returns 開閉の状態 引き金とパネルの ref と パネルの位置
  */
-function CostPillBody({
-	view,
-}: {
-	view: NonNullable<ReturnType<CostPillProps["useProjection"]>>;
-}) {
+function useCostDialog() {
+	const [open, setOpen] = useState(false);
+	const rootRef = useRef<HTMLSpanElement | null>(null);
+	const panelRef = useRef<HTMLDivElement | null>(null);
+	const pos = useAnchoredPosition({
+		open,
+		anchorRef: rootRef,
+		panelRef,
+		side: "top",
+		gap: PANEL_GAP,
+		margin: PANEL_MARGIN,
+	});
+	useDismissOnOutsidePointer(rootRef, open, setOpen, panelRef);
+	useEffect(() => {
+		if (!open) return;
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape") setOpen(false);
+		};
+		document.addEventListener("keydown", onKeyDown);
+		return () => {
+			document.removeEventListener("keydown", onKeyDown);
+		};
+	}, [open]);
+	return { open, setOpen, rootRef, panelRef, pos };
+}
+
+/**
+ * 金額そのものを出すピル
+ *
+ * 押すと内訳のパネルが開く パネルの骨組みはシェルの統計ピルと同じで 見出しと
+ * 罫線の下に 見出しと値の組みを並べる
+ * @param props - 表示する金額
+ * @returns 引き金と 開いているときのパネル
+ */
+function CostPillBody({ view }: { view: CostMeterView }) {
+	const { open, setOpen, rootRef, panelRef, pos } = useCostDialog();
+	const amount = `${view.symbol}${formatAmount(view.total)}`;
 	return (
-		<Tooltip label={breakdownText(view)} side="top">
-			<span className="dsh-cost-meter-pill" data-cost-meter>
+		<span ref={rootRef} className="dsh-cost-meter-anchor">
+			<button
+				type="button"
+				className="dsh-cost-meter-pill"
+				aria-haspopup="dialog"
+				aria-expanded={open}
+				aria-label={`${PANEL_TITLE} ${amount}${view.unpricedTokens > 0 ? "+" : ""}`}
+				onClick={() => {
+					setOpen(!open);
+				}}
+			>
 				<span className="dsh-cost-meter-symbol" aria-hidden>
 					{view.symbol}
 				</span>
-				<span className="dsh-cost-meter-amount">
-					{formatAmount(view.total)}
-				</span>
+				<span className="dsh-cost-meter-label">{formatAmount(view.total)}</span>
 				{view.unpricedTokens > 0 && (
 					<span className="dsh-cost-meter-unpriced" aria-hidden>
 						+
 					</span>
 				)}
-			</span>
-		</Tooltip>
+			</button>
+			{open &&
+				createPortal(
+					<div
+						ref={panelRef}
+						className="dsh-cost-meter-panel"
+						role="dialog"
+						aria-label={PANEL_TITLE}
+						style={pos ?? MEASURE_STYLE}
+					>
+						<div className="dsh-cost-meter-title">
+							<span className="dsh-cost-meter-titleLabel">
+								<span className="dsh-cost-meter-symbol" aria-hidden>
+									{view.symbol}
+								</span>
+								{PANEL_TITLE}
+							</span>
+							<span className="dsh-cost-meter-titleValue">{amount}</span>
+						</div>
+						<div className="dsh-cost-meter-titleRule" aria-hidden />
+						<dl className="dsh-cost-meter-details" data-cost-meter-details>
+							{breakdownRows(view).map((row) => (
+								<Fragment key={row.label}>
+									<dt>{row.label}</dt>
+									<dd
+										className={
+											row.route === true ? "dsh-cost-meter-route" : undefined
+										}
+									>
+										{row.value}
+									</dd>
+								</Fragment>
+							))}
+						</dl>
+					</div>,
+					document.body,
+				)}
+		</span>
 	);
 }
 

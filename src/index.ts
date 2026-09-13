@@ -28,7 +28,7 @@ import {
 	tokenTotal,
 	totalOf,
 	ZERO_PARTS,
-} from "./shared.ts";
+} from "./shared";
 
 /** cordis のプラグイン名 */
 export const name = "cost-meter";
@@ -279,6 +279,104 @@ function withSample(
 }
 
 /**
+ * route を差し替える
+ *
+ * 標本を値付けした route が変わったときだけ 配る値を作り直す
+ * @param state - 直前の状態
+ * @param config - リクエストの provider と model
+ * @param settings - 単価と表示記号を持つ設定
+ * @returns 次の状態
+ */
+function withRoute(
+	state: CostMeterState,
+	config: Route,
+	settings: CostSettings,
+): CostMeterState {
+	if (
+		state.route?.provider === config.provider &&
+		state.route.model === config.model
+	)
+		return state;
+	const route: Route = { provider: config.provider, model: config.model };
+	return {
+		...state,
+		route,
+		wire: buildView(
+			state.parts,
+			state.tokens,
+			state.unpricedTokens,
+			route,
+			settings.symbol,
+		),
+	};
+}
+
+/**
+ * 再試行が始まったステップの標本枠を閉じる
+ *
+ * 閉じることで再試行の標本が前の試行を差し替えず 足し込まれる
+ * @param state - 直前の状態
+ * @param turn - 再試行するターン
+ * @param step - 再試行するステップ
+ * @returns 次の状態
+ */
+function withoutRetriedSample(
+	state: CostMeterState,
+	turn: number,
+	step: number,
+): CostMeterState {
+	return state.last !== null &&
+		state.last.turn === turn &&
+		state.last.step === step
+		? { ...state, last: null }
+		: state;
+}
+
+/**
+ * 耐久イベントから1つの標本を読む
+ *
+ * 同じステップの直前の標本も一緒に返す 呼び出し側は再報告かどうかをそれで見る
+ * @param state - 直前の状態
+ * @param event - 畳む耐久イベント
+ * @param settings - 単価と表示記号を持つ設定
+ * @returns 直前の標本と読んだ標本 標本を持たないイベントでは null
+ */
+function readSample(
+	state: CostMeterState,
+	event: SessionEvent,
+	settings: CostSettings,
+): { previous: Sample | null; sample: Sample } | null {
+	if (event.type !== "assistant/message" && event.type !== "assistant/attempt")
+		return null;
+	const usage = usageOf(event);
+	if (usage === undefined) return null;
+	const buckets = bucketsFromUsage(usage);
+	if (buckets === undefined) return null;
+	const turn = event.data.turn;
+	const step = event.data.step;
+	const previous =
+		state.last !== null && state.last.turn === turn && state.last.step === step
+			? state.last
+			: null;
+	const rates = resolveRates(
+		settings,
+		state.route?.provider ?? null,
+		state.route?.model ?? null,
+	);
+	const parts = priceBuckets(buckets, rates) ?? ZERO_PARTS;
+	return {
+		previous,
+		sample: {
+			turn,
+			step,
+			buckets,
+			cost: parts,
+			unpriced: rates === undefined ? tokenTotal(buckets) : 0,
+		},
+	};
+}
+
+/**
  * クライアントへ配る値を持つ投影定義
  *
  * 登録面は `wire` を持つ定義だけをクライアント可視として受け取るため
@@ -316,62 +414,27 @@ export function costMeterProjection(
 		}),
 		apply: (state, event) => {
 			if (event.type === "request/header") {
-				const provider = event.data.header.config.provider;
-				const model = event.data.header.config.model;
-				if (state.route?.provider === provider && state.route.model === model)
-					return state;
-				const route: Route = { provider, model };
-				return {
-					...state,
-					route,
-					wire: buildView(
-						state.parts,
-						state.tokens,
-						state.unpricedTokens,
-						route,
-						settings.symbol,
-					),
-				};
+				return withRoute(state, event.data.header.config, settings);
 			}
 			if (event.type === "llm/retry-started") {
-				return state.last !== null &&
-					state.last.turn === event.data.turn &&
-					state.last.step === event.data.step
-					? { ...state, last: null }
-					: state;
+				return withoutRetriedSample(state, event.data.turn, event.data.step);
 			}
-			if (
-				event.type !== "assistant/message" &&
-				event.type !== "assistant/attempt"
-			)
-				return state;
-			const usage = usageOf(event);
-			if (usage === undefined) return state;
-			const buckets = bucketsFromUsage(usage);
-			if (buckets === undefined) return state;
-			const previous =
-				state.last !== null &&
-				state.last.turn === event.data.turn &&
-				state.last.step === event.data.step
-					? state.last
-					: null;
+			const read = readSample(state, event, settings);
+			if (read === null) return state;
 			// 同じ試行の再報告は集計を動かさない
-			if (previous !== null && bucketsEqual(previous.buckets, buckets))
+			if (
+				read.previous !== null &&
+				bucketsEqual(read.previous.buckets, read.sample.buckets)
+			) {
 				return state;
-			const rates = resolveRates(
-				settings,
-				state.route?.provider ?? null,
-				state.route?.model ?? null,
+			}
+			return withSample(
+				state,
+				read.previous,
+				read.sample,
+				state.route,
+				settings.symbol,
 			);
-			const parts = priceBuckets(buckets, rates) ?? ZERO_PARTS;
-			const sample: Sample = {
-				turn: event.data.turn,
-				step: event.data.step,
-				buckets,
-				cost: parts,
-				unpriced: rates === undefined ? tokenTotal(buckets) : 0,
-			};
-			return withSample(state, previous, sample, state.route, settings.symbol);
 		},
 		wire: {
 			viewSchema,

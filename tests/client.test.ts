@@ -11,8 +11,8 @@ import { readFileSync } from "node:fs";
 import { createElement, type FunctionComponent } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { z as zod } from "zod";
-import { costMeterProjection } from "../src/index.ts";
-import type { CostMeterView } from "../src/shared.ts";
+import { costMeterProjection } from "../src/index";
+import type { CostMeterView } from "../src/shared";
 
 /**
  * ローダーが捕まえた登録
@@ -59,7 +59,10 @@ function loadBundle(): LoadedBundle {
 		if (specifier === "react/jsx-runtime") return jsxRuntime;
 		if (specifier === "react-dom") return reactDom;
 		if (specifier === "@deepseek-ai/dsh-client-ui-primitives")
-			return { Tooltip: StubTooltip };
+			return {
+				useAnchoredPosition: () => null,
+				useDismissOnOutsidePointer: () => undefined,
+			};
 		throw new Error(`unexpected require: ${specifier}`);
 	};
 	new Function("window", "require", code)(window, requireForBundle);
@@ -95,15 +98,6 @@ const styleTags: { id: string; textContent: string; remove: () => void }[] = [];
 const React = await import("react");
 const jsxRuntime = await import("react/jsx-runtime");
 const reactDom = await import("react-dom");
-
-/**
- * 吹き出しを描かない差し替え品 検証したいのはピルの中身だけ
- * @param props - ラベルと中身
- * @returns 中身そのもの
- */
-function StubTooltip({ children }: { children: unknown }) {
-	return children;
-}
 
 /**
  * 偽のクライアントコンテキストを作る
@@ -185,7 +179,9 @@ describe("client bundle", () => {
 				useProjection: () => viewSchema.parse(view),
 			}),
 		);
+		// シェルの統計ピルと同じく 押すと開く引き金として描く
 		expect(markup).toContain("dsh-cost-meter-pill");
+		expect(markup).toContain('aria-haspopup="dialog"');
 		expect(markup).toContain(">0.421<");
 		expect(markup).not.toContain("dsh-cost-meter-unpriced");
 	});
